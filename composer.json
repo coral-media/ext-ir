@@ -1,0 +1,31 @@
+{
+  "name": "coral-media/ext-ir",
+  "description": "Information retrieval primitives for PHP",
+  "type": "php-ext",
+  "license": "MIT",
+  "require": {
+    "php": ">=8.1"
+  },
+  "keywords": [
+    "php-ext",
+    "information-retrieval",
+    "nlp",
+    "vector-search"
+  ],
+  "authors": [
+    {
+      "name": "Rafael Ernesto Espinosa Santiesteban",
+      "email": "rernesto.espinosa@gmail.com"
+    }
+  ],
+  "php-ext": {
+    "extension-name": "ir",
+    "configure-options": [
+      {
+        "name": "enable-ir",
+        "description": "Enable IR extension",
+        "needs-value": false
+      }
+    ]
+  }
+}

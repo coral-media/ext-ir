@@ -1,0 +1,87 @@
+ARG_ENABLE("ir", "whether to enable ir support", "yes");
+
+if (PHP_IR != "no") {
+    var CFLAGS_IR = "";
+    var snowballBase = "lib\\libstemmer";
+    var openblas_root = WshShell.ExpandEnvironmentStrings("%OPENBLAS_ROOT%");
+
+    if (openblas_root == "%OPENBLAS_ROOT%") {
+        STDERR.WriteLine("ERROR: OPENBLAS_ROOT is not set. System OpenBLAS is required to build ext-ir.");
+        WScript.Quit(1);
+    }
+
+    if (!FSO.FolderExists(openblas_root + "\\include")) {
+        STDERR.WriteLine("ERROR: OpenBLAS include directory not found under OPENBLAS_ROOT: " + openblas_root);
+        WScript.Quit(1);
+    }
+
+    if (!FSO.FolderExists(openblas_root + "\\lib")) {
+        STDERR.WriteLine("ERROR: OpenBLAS library directory not found under OPENBLAS_ROOT: " + openblas_root);
+        WScript.Quit(1);
+    }
+
+    if (!FSO.FileExists(openblas_root + "\\lib\\openblas.lib")) {
+        STDERR.WriteLine("ERROR: openblas.lib not found under OPENBLAS_ROOT: " + openblas_root + "\\lib");
+        WScript.Quit(1);
+    }
+
+    CFLAGS_IR = CFLAGS_IR + " /DHAVE_IR";
+    CFLAGS_IR = CFLAGS_IR + " /DHAVE_OPENBLAS";
+    CFLAGS_IR = CFLAGS_IR + " /DOPENBLAS_USE_SYSTEM";
+    CFLAGS_IR = CFLAGS_IR + " /DHAVE_SNOWBALL";
+    CFLAGS_IR = CFLAGS_IR + " /I\"" + openblas_root + "\\include\"";
+    if (FSO.FolderExists(openblas_root + "\\include\\openblas")) {
+        CFLAGS_IR = CFLAGS_IR + " /I\"" + openblas_root + "\\include\\openblas\"";
+    }
+    CFLAGS_IR = CFLAGS_IR + " /I" + snowballBase;
+    CFLAGS_IR = CFLAGS_IR + " /I" + snowballBase + "\\include";
+    CFLAGS_IR = CFLAGS_IR + " /I" + snowballBase + "\\runtime";
+    CFLAGS_IR = CFLAGS_IR + " /I" + snowballBase + "\\src_c";
+
+    ADD_FLAG("LDFLAGS", "/LIBPATH:\"" + openblas_root + "\\lib\"");
+    ADD_FLAG("LIBS", "openblas.lib");
+
+    AC_DEFINE("HAVE_IR", 1, "Have ir support");
+    AC_DEFINE("HAVE_OPENBLAS", 1, "Have OpenBLAS support");
+    AC_DEFINE("OPENBLAS_USE_SYSTEM", 1, "Use system OpenBLAS library");
+    AC_DEFINE("HAVE_SNOWBALL", 1, "Have Snowball (libstemmer)");
+    EXTENSION("ir",
+        "ir.c " +
+        "lib\\libstemmer\\src_c\\stem_ISO_8859_1_danish.c " +
+        "lib\\libstemmer\\src_c\\stem_UTF_8_danish.c " +
+        "lib\\libstemmer\\src_c\\stem_ISO_8859_1_dutch.c " +
+        "lib\\libstemmer\\src_c\\stem_UTF_8_dutch.c " +
+        "lib\\libstemmer\\src_c\\stem_ISO_8859_1_english.c " +
+        "lib\\libstemmer\\src_c\\stem_UTF_8_english.c " +
+        "lib\\libstemmer\\src_c\\stem_ISO_8859_1_finnish.c " +
+        "lib\\libstemmer\\src_c\\stem_UTF_8_finnish.c " +
+        "lib\\libstemmer\\src_c\\stem_ISO_8859_1_french.c " +
+        "lib\\libstemmer\\src_c\\stem_UTF_8_french.c " +
+        "lib\\libstemmer\\src_c\\stem_ISO_8859_1_german.c " +
+        "lib\\libstemmer\\src_c\\stem_UTF_8_german.c " +
+        "lib\\libstemmer\\src_c\\stem_ISO_8859_1_hungarian.c " +
+        "lib\\libstemmer\\src_c\\stem_UTF_8_hungarian.c " +
+        "lib\\libstemmer\\src_c\\stem_ISO_8859_1_italian.c " +
+        "lib\\libstemmer\\src_c\\stem_UTF_8_italian.c " +
+        "lib\\libstemmer\\src_c\\stem_ISO_8859_1_norwegian.c " +
+        "lib\\libstemmer\\src_c\\stem_UTF_8_norwegian.c " +
+        "lib\\libstemmer\\src_c\\stem_ISO_8859_1_porter.c " +
+        "lib\\libstemmer\\src_c\\stem_UTF_8_porter.c " +
+        "lib\\libstemmer\\src_c\\stem_ISO_8859_1_portuguese.c " +
+        "lib\\libstemmer\\src_c\\stem_UTF_8_portuguese.c " +
+        "lib\\libstemmer\\src_c\\stem_ISO_8859_2_romanian.c " +
+        "lib\\libstemmer\\src_c\\stem_UTF_8_romanian.c " +
+        "lib\\libstemmer\\src_c\\stem_KOI8_R_russian.c " +
+        "lib\\libstemmer\\src_c\\stem_UTF_8_russian.c " +
+        "lib\\libstemmer\\src_c\\stem_ISO_8859_1_spanish.c " +
+        "lib\\libstemmer\\src_c\\stem_UTF_8_spanish.c " +
+        "lib\\libstemmer\\src_c\\stem_ISO_8859_1_swedish.c " +
+        "lib\\libstemmer\\src_c\\stem_UTF_8_swedish.c " +
+        "lib\\libstemmer\\src_c\\stem_UTF_8_turkish.c " +
+        "lib\\libstemmer\\runtime\\api.c " +
+        "lib\\libstemmer\\runtime\\utilities.c " +
+        "lib\\libstemmer\\libstemmer\\libstemmer.c",
+        true,
+        CFLAGS_IR
+    );
+}
