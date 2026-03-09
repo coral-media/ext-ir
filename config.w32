@@ -4,6 +4,7 @@ if (PHP_IR != "no") {
     var CFLAGS_IR = "";
     var snowballBase = "lib\\libstemmer";
     var openblas_root = WshShell.ExpandEnvironmentStrings("%OPENBLAS_ROOT%");
+    var openblas_lib_name = "";
 
     if (openblas_root == "%OPENBLAS_ROOT%") {
         STDERR.WriteLine("ERROR: OPENBLAS_ROOT is not set. System OpenBLAS is required to build ext-ir.");
@@ -20,8 +21,12 @@ if (PHP_IR != "no") {
         WScript.Quit(1);
     }
 
-    if (!FSO.FileExists(openblas_root + "\\lib\\openblas.lib")) {
-        STDERR.WriteLine("ERROR: openblas.lib not found under OPENBLAS_ROOT: " + openblas_root + "\\lib");
+    if (FSO.FileExists(openblas_root + "\\lib\\openblas.lib")) {
+        openblas_lib_name = "openblas.lib";
+    } else if (FSO.FileExists(openblas_root + "\\lib\\libopenblas.lib")) {
+        openblas_lib_name = "libopenblas.lib";
+    } else {
+        STDERR.WriteLine("ERROR: neither openblas.lib nor libopenblas.lib found under OPENBLAS_ROOT: " + openblas_root + "\\lib");
         WScript.Quit(1);
     }
 
@@ -39,7 +44,7 @@ if (PHP_IR != "no") {
     CFLAGS_IR = CFLAGS_IR + " /I" + snowballBase + "\\src_c";
 
     ADD_FLAG("LDFLAGS", "/LIBPATH:\"" + openblas_root + "\\lib\"");
-    ADD_FLAG("LIBS", "openblas.lib");
+    ADD_FLAG("LIBS", openblas_lib_name);
 
     AC_DEFINE("HAVE_IR", 1, "Have ir support");
     AC_DEFINE("HAVE_OPENBLAS", 1, "Have OpenBLAS support");

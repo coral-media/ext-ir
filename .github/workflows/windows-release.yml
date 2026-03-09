@@ -1,0 +1,84 @@
+name: windows release build
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  get-extension-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.extension-matrix.outputs.matrix }}
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: get extension matrix
+        id: extension-matrix
+        uses: php/php-windows-builder/extension-matrix@v1
+
+  build:
+    needs: get-extension-matrix
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix: ${{ fromJson(needs.get-extension-matrix.outputs.matrix) }}
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: select vcpkg triplet
+        shell: pwsh
+        run: |
+          $triplet = if ("${{ matrix.arch }}" -eq "x86") { "x86-windows" } else { "x64-windows" }
+          "VCPKG_TRIPLET=$triplet" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: resolve vcpkg root
+        id: vcpkg-root
+        shell: pwsh
+        run: |
+          $root = $env:VCPKG_INSTALLATION_ROOT
+          if (-not $root) { $root = "C:\vcpkg" }
+          "root=$root" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "VCPKG_ROOT=$root" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: cache vcpkg openblas
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.vcpkg-root.outputs.root }}\installed
+          key: vcpkg-openblas-${{ matrix.arch }}-0.3.29-v1
+
+      - name: install openblas
+        shell: pwsh
+        run: |
+          $root = "${{ steps.vcpkg-root.outputs.root }}"
+          & "$root\vcpkg.exe" --vcpkg-root="$root" install openblas:$env:VCPKG_TRIPLET
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: export openblas paths
+        shell: pwsh
+        run: |
+          $root = "${{ steps.vcpkg-root.outputs.root }}\installed\$env:VCPKG_TRIPLET"
+          "OPENBLAS_ROOT=$root" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "PATH=$root\bin;$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: build extension
+        uses: php/php-windows-builder/extension@v1
+        with:
+          php-version: ${{ matrix.php-version }}
+          arch: ${{ matrix.arch }}
+          ts: ${{ matrix.ts }}
+
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    if: ${{ github.event_name == 'release' }}
+    steps:
+      - name: upload artifact to release
+        uses: php/php-windows-builder/release@v1
+        with:
+          release: ${{ github.event.release.tag_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
