@@ -120,6 +120,14 @@ namespace CoralMedia\IR {
     final class Similarity
     {
         /**
+         * Computes Pearson correlation between two vectors.
+         *
+         * @param array $x First vector.
+         * @param array $y Second vector. Must have same length as `$x`.
+         */
+        public static function pearson(array $x, array $y): float {}
+
+        /**
          * Computes cosine similarity between two vectors.
          *
          * @param array $x First vector.
@@ -141,7 +149,7 @@ namespace CoralMedia\IR {
          *
          * @param array $query Sparse query vector (term => weight).
          * @param array $candidates List of sparse candidate vectors.
-         * @param string $metric Similarity metric: "cosine" or "euclidean".
+         * @param string $metric Similarity metric: "cosine", "euclidean", or "pearson".
          */
         public static function nearest(array $query, array $candidates, string $metric = "cosine"): int {}
 
@@ -151,7 +159,7 @@ namespace CoralMedia\IR {
          * @param array $query Sparse query vector (term => weight).
          * @param array $candidates List of sparse candidate vectors.
          * @param int $k Number of results to return.
-         * @param string $metric Similarity metric: "cosine" or "euclidean".
+         * @param string $metric Similarity metric: "cosine", "euclidean", or "pearson".
          * @return array<int, array{index:int, score:float}>
          */
         public static function topK(array $query, array $candidates, int $k = 5, string $metric = "cosine"): array {}

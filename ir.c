@@ -35,6 +35,20 @@ static inline double ir_euclidean_similarity_from_dot_normsquared(double dot, do
 	return 1.0 / (1.0 + sqrt(distance_squared));
 }
 
+static inline double ir_pearson_from_aggregates(double n, double sum_x, double sum_y, double sum_xy, double sum_x2, double sum_y2)
+{
+	double numerator = (n * sum_xy) - (sum_x * sum_y);
+	double left = (n * sum_x2) - (sum_x * sum_x);
+	double right = (n * sum_y2) - (sum_y * sum_y);
+	double denominator_squared = left * right;
+
+	if (denominator_squared <= 0.0) {
+		return 0.0;
+	}
+
+	return numerator / sqrt(denominator_squared);
+}
+
 typedef struct {
 	zend_long index;
 	double score;
@@ -295,9 +309,53 @@ static double ir_sparse_norm2(zend_array *a)
 	return sqrt(sum);
 }
 
+static double ir_sparse_sum(zend_array *a)
+{
+	zval *val;
+	double sum = 0.0;
+
+	ZEND_HASH_FOREACH_VAL(a, val) {
+		sum += zval_get_double(val);
+	} ZEND_HASH_FOREACH_END();
+
+	return sum;
+}
+
+static size_t ir_sparse_intersection_count(zend_array *a, zend_array *b)
+{
+	zval *val;
+	zend_string *key;
+	size_t count = 0;
+	zend_array *small = (zend_hash_num_elements(a) <= zend_hash_num_elements(b)) ? a : b;
+	zend_array *large = (small == a) ? b : a;
+
+	ZEND_HASH_FOREACH_STR_KEY_VAL(small, key, val) {
+		if (key == NULL) {
+			continue;
+		}
+		if (zend_hash_find(large, key) != NULL) {
+			count++;
+		}
+	} ZEND_HASH_FOREACH_END();
+
+	return count;
+}
+
 static double ir_sparse_similarity(zend_array *query, zend_array *candidate, const char *metric)
 {
 	double dot = ir_sparse_dot(query, candidate);
+
+	if (strcmp(metric, "pearson") == 0) {
+		double sum_q = ir_sparse_sum(query);
+		double sum_c = ir_sparse_sum(candidate);
+		double sum_q2 = ir_sparse_dot(query, query);
+		double sum_c2 = ir_sparse_dot(candidate, candidate);
+		size_t n_query = zend_hash_num_elements(query);
+		size_t n_candidate = zend_hash_num_elements(candidate);
+		size_t intersection = ir_sparse_intersection_count(query, candidate);
+		double n = (double) (n_query + n_candidate - intersection);
+		return ir_pearson_from_aggregates(n, sum_q, sum_c, dot, sum_q2, sum_c2);
+	}
 
 	if (strcmp(metric, "cosine") == 0) {
 		double nq = ir_sparse_norm2(query);
@@ -465,6 +523,61 @@ ZEND_METHOD(CoralMedia_IR_Similarity, cosine)
 	efree(y_values);
 
 	RETURN_DOUBLE(ir_cosine_from_dot_and_norms(dot, nx, ny));
+}
+/* }}} */
+
+/* {{{ CoralMedia\IR\Similarity::pearson() */
+ZEND_METHOD(CoralMedia_IR_Similarity, pearson)
+{
+	zval *x, *y;
+	HashTable *hx, *hy;
+	uint32_t n = 0, i = 0;
+	double *x_values, *y_values;
+	zval *vx, *vy;
+	double sum_x = 0.0, sum_y = 0.0, sum_xy = 0.0, sum_x2 = 0.0, sum_y2 = 0.0;
+
+	ZEND_PARSE_PARAMETERS_START(2, 2)
+		Z_PARAM_ARRAY(x)
+		Z_PARAM_ARRAY(y)
+	ZEND_PARSE_PARAMETERS_END();
+
+	hx = Z_ARRVAL_P(x);
+	hy = Z_ARRVAL_P(y);
+	n = zend_hash_num_elements(hx);
+
+	if (n != zend_hash_num_elements(hy)) {
+		zend_argument_value_error(2, "must have the same number of elements as argument #1 ($x)");
+		RETURN_THROWS();
+	}
+
+	if (n == 0) {
+		RETURN_DOUBLE(0.0);
+	}
+
+	x_values = (double *) safe_emalloc(n, sizeof(double), 0);
+	y_values = (double *) safe_emalloc(n, sizeof(double), 0);
+
+	ZEND_HASH_FOREACH_VAL(hx, vx) {
+		x_values[i++] = zval_get_double(vx);
+	} ZEND_HASH_FOREACH_END();
+
+	i = 0;
+	ZEND_HASH_FOREACH_VAL(hy, vy) {
+		y_values[i++] = zval_get_double(vy);
+	} ZEND_HASH_FOREACH_END();
+
+	for (i = 0; i < n; i++) {
+		sum_x += x_values[i];
+		sum_y += y_values[i];
+		sum_xy += x_values[i] * y_values[i];
+		sum_x2 += x_values[i] * x_values[i];
+		sum_y2 += y_values[i] * y_values[i];
+	}
+
+	efree(x_values);
+	efree(y_values);
+
+	RETURN_DOUBLE(ir_pearson_from_aggregates((double) n, sum_x, sum_y, sum_xy, sum_x2, sum_y2));
 }
 /* }}} */
 
@@ -1284,8 +1397,8 @@ ZEND_METHOD(CoralMedia_IR_Similarity, nearest)
 		Z_PARAM_STRING(metric, metric_len)
 	ZEND_PARSE_PARAMETERS_END();
 
-	if (strcmp(metric, "cosine") != 0 && strcmp(metric, "euclidean") != 0) {
-		zend_argument_value_error(3, "must be \"cosine\" or \"euclidean\"");
+	if (strcmp(metric, "cosine") != 0 && strcmp(metric, "euclidean") != 0 && strcmp(metric, "pearson") != 0) {
+		zend_argument_value_error(3, "must be \"cosine\", \"euclidean\", or \"pearson\"");
 		RETURN_THROWS();
 	}
 
@@ -1327,8 +1440,8 @@ ZEND_METHOD(CoralMedia_IR_Similarity, topK)
 		Z_PARAM_STRING(metric, metric_len)
 	ZEND_PARSE_PARAMETERS_END();
 
-	if (strcmp(metric, "cosine") != 0 && strcmp(metric, "euclidean") != 0) {
-		zend_argument_value_error(4, "must be \"cosine\" or \"euclidean\"");
+	if (strcmp(metric, "cosine") != 0 && strcmp(metric, "euclidean") != 0 && strcmp(metric, "pearson") != 0) {
+		zend_argument_value_error(4, "must be \"cosine\", \"euclidean\", or \"pearson\"");
 		RETURN_THROWS();
 	}
 	if (k < 0) {
