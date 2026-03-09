@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 26dc2e75f0d3056b7383406dbe7df2f604c639de */
+ * Stub hash: dec2fd91d036cdea0c6b5a7e0ad0bdec60c3d2b2 */
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_ir_version, 0, 0, IS_STRING, 0)
 ZEND_END_ARG_INFO()
@@ -12,10 +12,6 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_CoralMedia_IR_LinearAlgebra_normL2, 0, 1, IS_DOUBLE, 0)
 	ZEND_ARG_TYPE_INFO(0, x, IS_ARRAY, 0)
 ZEND_END_ARG_INFO()
-
-#define arginfo_class_CoralMedia_IR_LinearAlgebra_cosineSimilarity arginfo_class_CoralMedia_IR_LinearAlgebra_dot
-
-#define arginfo_class_CoralMedia_IR_LinearAlgebra_euclideanSimilarity arginfo_class_CoralMedia_IR_LinearAlgebra_dot
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_CoralMedia_IR_Text_tokenize, 0, 1, IS_ARRAY, 0)
 	ZEND_ARG_TYPE_INFO(0, texts, IS_ARRAY, 0)
@@ -49,6 +45,10 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_CoralMedia_IR_Vectorizer_tfIdf arginfo_class_CoralMedia_IR_Vectorizer_frequency
 
+#define arginfo_class_CoralMedia_IR_Similarity_cosine arginfo_class_CoralMedia_IR_LinearAlgebra_dot
+
+#define arginfo_class_CoralMedia_IR_Similarity_euclidean arginfo_class_CoralMedia_IR_LinearAlgebra_dot
+
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_CoralMedia_IR_Similarity_nearest, 0, 2, IS_LONG, 0)
 	ZEND_ARG_TYPE_INFO(0, query, IS_ARRAY, 0)
 	ZEND_ARG_TYPE_INFO(0, candidates, IS_ARRAY, 0)
@@ -66,8 +66,6 @@ ZEND_END_ARG_INFO()
 ZEND_FUNCTION(ir_version);
 ZEND_METHOD(CoralMedia_IR_LinearAlgebra, dot);
 ZEND_METHOD(CoralMedia_IR_LinearAlgebra, normL2);
-ZEND_METHOD(CoralMedia_IR_LinearAlgebra, cosineSimilarity);
-ZEND_METHOD(CoralMedia_IR_LinearAlgebra, euclideanSimilarity);
 ZEND_METHOD(CoralMedia_IR_Text, tokenize);
 ZEND_METHOD(CoralMedia_IR_Text, stem);
 ZEND_METHOD(CoralMedia_IR_Vectorizer, frequency);
@@ -76,6 +74,8 @@ ZEND_METHOD(CoralMedia_IR_Vectorizer, fit);
 ZEND_METHOD(CoralMedia_IR_Vectorizer, transform);
 ZEND_METHOD(CoralMedia_IR_Vectorizer, fitTransform);
 ZEND_METHOD(CoralMedia_IR_Vectorizer, tfIdf);
+ZEND_METHOD(CoralMedia_IR_Similarity, cosine);
+ZEND_METHOD(CoralMedia_IR_Similarity, euclidean);
 ZEND_METHOD(CoralMedia_IR_Similarity, nearest);
 ZEND_METHOD(CoralMedia_IR_Similarity, topK);
 
@@ -89,8 +89,6 @@ static const zend_function_entry ext_functions[] = {
 static const zend_function_entry class_CoralMedia_IR_LinearAlgebra_methods[] = {
 	ZEND_ME(CoralMedia_IR_LinearAlgebra, dot, arginfo_class_CoralMedia_IR_LinearAlgebra_dot, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_ME(CoralMedia_IR_LinearAlgebra, normL2, arginfo_class_CoralMedia_IR_LinearAlgebra_normL2, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
-	ZEND_ME(CoralMedia_IR_LinearAlgebra, cosineSimilarity, arginfo_class_CoralMedia_IR_LinearAlgebra_cosineSimilarity, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
-	ZEND_ME(CoralMedia_IR_LinearAlgebra, euclideanSimilarity, arginfo_class_CoralMedia_IR_LinearAlgebra_euclideanSimilarity, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_FE_END
 };
 
@@ -114,6 +112,8 @@ static const zend_function_entry class_CoralMedia_IR_Vectorizer_methods[] = {
 
 
 static const zend_function_entry class_CoralMedia_IR_Similarity_methods[] = {
+	ZEND_ME(CoralMedia_IR_Similarity, cosine, arginfo_class_CoralMedia_IR_Similarity_cosine, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+	ZEND_ME(CoralMedia_IR_Similarity, euclidean, arginfo_class_CoralMedia_IR_Similarity_euclidean, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_ME(CoralMedia_IR_Similarity, nearest, arginfo_class_CoralMedia_IR_Similarity_nearest, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_ME(CoralMedia_IR_Similarity, topK, arginfo_class_CoralMedia_IR_Similarity_topK, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_FE_END

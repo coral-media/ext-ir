@@ -52,10 +52,10 @@ Windows notes:
 Current scaffold (`0.1.0`) includes:
 
 - `ir_version()`
-- `CoralMedia\IR\LinearAlgebra::{dot,normL2,cosineSimilarity,euclideanSimilarity}()`
+- `CoralMedia\IR\LinearAlgebra::{dot,normL2}()`
 - `CoralMedia\IR\Text::{tokenize,stem}()`
 - `CoralMedia\IR\Vectorizer::{frequency,vocabulary,fit,transform,fitTransform,tfIdf}()`
-- `CoralMedia\IR\Similarity::{nearest,topK}()`
+- `CoralMedia\IR\Similarity::{cosine,euclidean,nearest,topK}()`
 
 Usage example:
 

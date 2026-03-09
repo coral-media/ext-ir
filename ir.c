@@ -417,8 +417,8 @@ ZEND_METHOD(CoralMedia_IR_LinearAlgebra, normL2)
 }
 /* }}} */
 
-/* {{{ CoralMedia\IR\LinearAlgebra::cosineSimilarity() */
-ZEND_METHOD(CoralMedia_IR_LinearAlgebra, cosineSimilarity)
+/* {{{ CoralMedia\IR\Similarity::cosine() */
+ZEND_METHOD(CoralMedia_IR_Similarity, cosine)
 {
 	zval *x, *y;
 	HashTable *hx, *hy;
@@ -468,8 +468,8 @@ ZEND_METHOD(CoralMedia_IR_LinearAlgebra, cosineSimilarity)
 }
 /* }}} */
 
-/* {{{ CoralMedia\IR\LinearAlgebra::euclideanSimilarity() */
-ZEND_METHOD(CoralMedia_IR_LinearAlgebra, euclideanSimilarity)
+/* {{{ CoralMedia\IR\Similarity::euclidean() */
+ZEND_METHOD(CoralMedia_IR_Similarity, euclidean)
 {
 	zval *x, *y;
 	HashTable *hx, *hy;

@@ -27,22 +27,6 @@ namespace CoralMedia\IR {
          */
         public static function normL2(array $x): float {}
 
-        /**
-         * Computes cosine similarity between two vectors.
-         *
-         * @param array $x First vector.
-         * @param array $y Second vector. Must have same length as `$x`.
-         */
-        public static function cosineSimilarity(array $x, array $y): float {}
-
-        /**
-         * Computes Euclidean similarity between two vectors.
-         * Similarity is defined as 1 / (1 + euclidean_distance).
-         *
-         * @param array $x First vector.
-         * @param array $y Second vector. Must have same length as `$x`.
-         */
-        public static function euclideanSimilarity(array $x, array $y): float {}
     }
 
     final class Text
@@ -135,6 +119,23 @@ namespace CoralMedia\IR {
 
     final class Similarity
     {
+        /**
+         * Computes cosine similarity between two vectors.
+         *
+         * @param array $x First vector.
+         * @param array $y Second vector. Must have same length as `$x`.
+         */
+        public static function cosine(array $x, array $y): float {}
+
+        /**
+         * Computes Euclidean similarity between two vectors.
+         * Similarity is defined as 1 / (1 + euclidean_distance).
+         *
+         * @param array $x First vector.
+         * @param array $y Second vector. Must have same length as `$x`.
+         */
+        public static function euclidean(array $x, array $y): float {}
+
         /**
          * Returns the nearest item index for a query vector.
          *
