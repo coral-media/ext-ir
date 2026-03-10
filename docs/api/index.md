@@ -21,3 +21,4 @@ This is an automatically generated documentation for **Information retrieval pri
 | [`Text`](./classes/CoralMedia/IR/Text.md)                   |             |
 | [`Vectorizer`](./classes/CoralMedia/IR/Vectorizer.md)       |             |
 | [`Similarity`](./classes/CoralMedia/IR/Similarity.md)       |             |
+| [`Ranking`](./classes/CoralMedia/IR/Ranking.md)             |             |
