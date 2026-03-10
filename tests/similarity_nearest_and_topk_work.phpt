@@ -11,9 +11,9 @@ $candidates = [
     ["x" => 0.0, "y" => 1.0],
 ];
 
-$nearest = CoralMedia\IR\Similarity::nearest($query, $candidates, "cosine");
-$topK = CoralMedia\IR\Similarity::topK($query, $candidates, 2, "cosine");
-$nearestPearson = CoralMedia\IR\Similarity::nearest(
+$nearest = CoralMedia\IR\Ranking::nearest($query, $candidates, "cosine");
+$topK = CoralMedia\IR\Ranking::topK($query, $candidates, 2, "cosine");
+$nearestPearson = CoralMedia\IR\Ranking::nearest(
     ["x" => 1.0, "y" => 2.0],
     [
         ["x" => 2.0, "y" => 4.0],

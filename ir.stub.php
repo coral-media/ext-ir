@@ -144,12 +144,17 @@ namespace CoralMedia\IR {
          */
         public static function euclidean(array $x, array $y): float {}
 
+    }
+
+    final class Ranking
+    {
         /**
          * Returns the nearest item index for a query vector.
          *
          * @param array $query Sparse query vector (term => weight).
          * @param array $candidates List of sparse candidate vectors.
          * @param string $metric Similarity metric: "cosine", "euclidean", or "pearson".
+         * @return int Index of the highest-scoring candidate, or -1 when `$candidates` is empty.
          */
         public static function nearest(array $query, array $candidates, string $metric = "cosine"): int {}
 
@@ -163,5 +168,17 @@ namespace CoralMedia\IR {
          * @return array<int, array{index:int, score:float}>
          */
         public static function topK(array $query, array $candidates, int $k = 5, string $metric = "cosine"): array {}
+
+        /**
+         * Computes BM25 scores for a tokenized query against tokenized corpus items.
+         * Uses Robertson/Sparck Jones IDF: log(1 + (N - df + 0.5) / (df + 0.5)).
+         *
+         * @param array $queryTokens Tokenized query terms.
+         * @param array $tokenizedItems Tokenized corpus items, typically output from Text::tokenize().
+         * @param float $k1 BM25 term saturation parameter.
+         * @param float $b BM25 length normalization parameter.
+         * @return array<int, float> Scores aligned with `$tokenizedItems`.
+         */
+        public static function bm25(array $queryTokens, array $tokenizedItems, float $k1 = 1.5, float $b = 0.75): array {}
     }
 }

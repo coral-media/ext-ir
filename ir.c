@@ -18,6 +18,7 @@ static zend_class_entry *ir_ce_linear_algebra;
 static zend_class_entry *ir_ce_text;
 static zend_class_entry *ir_ce_vectorizer;
 static zend_class_entry *ir_ce_similarity;
+static zend_class_entry *ir_ce_ranking;
 
 static inline double ir_cosine_from_dot_and_norms(double dot, double norm_a, double norm_b)
 {
@@ -380,6 +381,27 @@ static int ir_score_desc_cmp(const void *a, const void *b)
 	if (sa->index > sb->index) return 1;
 	if (sa->index < sb->index) return -1;
 	return 0;
+}
+
+static zend_array *ir_term_frequency_map_from_tokens(zend_array *tokens)
+{
+	zend_array *tf_map = zend_new_array(16);
+	zval *token_val;
+
+	ZEND_HASH_FOREACH_VAL(tokens, token_val) {
+		zend_string *token = zval_get_string(token_val);
+		zval *existing = zend_hash_find(tf_map, token);
+		if (existing == NULL) {
+			zval one;
+			ZVAL_LONG(&one, 1);
+			zend_hash_add_new(tf_map, token, &one);
+		} else {
+			Z_LVAL_P(existing)++;
+		}
+		zend_string_release(token);
+	} ZEND_HASH_FOREACH_END();
+
+	return tf_map;
 }
 
 /* {{{ string ir_version() */
@@ -1378,8 +1400,8 @@ ZEND_METHOD(CoralMedia_IR_Vectorizer, fitTransform)
 }
 /* }}} */
 
-/* {{{ CoralMedia\IR\Similarity::nearest() */
-ZEND_METHOD(CoralMedia_IR_Similarity, nearest)
+/* {{{ CoralMedia\IR\Ranking::nearest() */
+ZEND_METHOD(CoralMedia_IR_Ranking, nearest)
 {
 	zval *query;
 	zval *candidates;
@@ -1420,8 +1442,8 @@ ZEND_METHOD(CoralMedia_IR_Similarity, nearest)
 }
 /* }}} */
 
-/* {{{ CoralMedia\IR\Similarity::topK() */
-ZEND_METHOD(CoralMedia_IR_Similarity, topK)
+/* {{{ CoralMedia\IR\Ranking::topK() */
+ZEND_METHOD(CoralMedia_IR_Ranking, topK)
 {
 	zval *query;
 	zval *candidates;
@@ -1483,6 +1505,113 @@ ZEND_METHOD(CoralMedia_IR_Similarity, topK)
 }
 /* }}} */
 
+/* {{{ CoralMedia\IR\Ranking::bm25() */
+ZEND_METHOD(CoralMedia_IR_Ranking, bm25)
+{
+	zval *query_tokens;
+	zval *tokenized_items;
+	double k1 = 1.5;
+	double b = 0.75;
+	uint32_t doc_count;
+	double total_doc_length = 0.0;
+	double avg_doc_length;
+	zend_array *df_map;
+	zend_array *query_tf_map;
+	zval *doc_val;
+
+	ZEND_PARSE_PARAMETERS_START(2, 4)
+		Z_PARAM_ARRAY(query_tokens)
+		Z_PARAM_ARRAY(tokenized_items)
+		Z_PARAM_OPTIONAL
+		Z_PARAM_DOUBLE(k1)
+		Z_PARAM_DOUBLE(b)
+	ZEND_PARSE_PARAMETERS_END();
+
+	if (k1 < 0.0) {
+		zend_argument_value_error(3, "must be greater than or equal to 0");
+		RETURN_THROWS();
+	}
+	if (b < 0.0 || b > 1.0) {
+		zend_argument_value_error(4, "must be between 0 and 1");
+		RETURN_THROWS();
+	}
+
+	doc_count = zend_hash_num_elements(Z_ARRVAL_P(tokenized_items));
+	array_init(return_value);
+	if (doc_count == 0) {
+		return;
+	}
+
+	df_map = zend_new_array(64);
+
+	ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(tokenized_items), doc_val) {
+		zend_array *seen;
+		zval *token_val;
+
+		if (Z_TYPE_P(doc_val) != IS_ARRAY) {
+			zend_array_destroy(df_map);
+			zend_argument_value_error(2, "must be an array of token arrays");
+			RETURN_THROWS();
+		}
+
+		total_doc_length += (double) zend_hash_num_elements(Z_ARRVAL_P(doc_val));
+		seen = zend_new_array(16);
+
+		ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(doc_val), token_val) {
+			zend_string *token = zval_get_string(token_val);
+			if (!zend_hash_exists(seen, token)) {
+				zval *existing_df;
+				zval one;
+				zend_hash_add_empty_element(seen, token);
+				existing_df = zend_hash_find(df_map, token);
+				if (existing_df == NULL) {
+					ZVAL_LONG(&one, 1);
+					zend_hash_add_new(df_map, token, &one);
+				} else {
+					Z_LVAL_P(existing_df)++;
+				}
+			}
+			zend_string_release(token);
+		} ZEND_HASH_FOREACH_END();
+
+		zend_array_destroy(seen);
+	} ZEND_HASH_FOREACH_END();
+
+	avg_doc_length = total_doc_length / (double) doc_count;
+	query_tf_map = ir_term_frequency_map_from_tokens(Z_ARRVAL_P(query_tokens));
+
+	ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(tokenized_items), doc_val) {
+		zend_array *doc_tf_map = ir_term_frequency_map_from_tokens(Z_ARRVAL_P(doc_val));
+		double doc_length = (double) zend_hash_num_elements(Z_ARRVAL_P(doc_val));
+		double score = 0.0;
+		zend_string *term;
+		zval *query_tf_val;
+
+		ZEND_HASH_FOREACH_STR_KEY_VAL(query_tf_map, term, query_tf_val) {
+			zval *doc_tf_val = zend_hash_find(doc_tf_map, term);
+			zval *df_val = zend_hash_find(df_map, term);
+
+			if (doc_tf_val != NULL && df_val != NULL) {
+				double tf = (double) Z_LVAL_P(doc_tf_val);
+				double df = (double) Z_LVAL_P(df_val);
+				double query_tf = (double) Z_LVAL_P(query_tf_val);
+				double idf = log(1.0 + (((double) doc_count - df + 0.5) / (df + 0.5)));
+				double denom = tf + (k1 * (1.0 - b + (b * (doc_length / avg_doc_length))));
+				if (denom != 0.0) {
+					score += query_tf * idf * ((tf * (k1 + 1.0)) / denom);
+				}
+			}
+		} ZEND_HASH_FOREACH_END();
+
+		zend_array_destroy(doc_tf_map);
+		add_next_index_double(return_value, score);
+	} ZEND_HASH_FOREACH_END();
+
+	zend_array_destroy(query_tf_map);
+	zend_array_destroy(df_map);
+}
+/* }}} */
+
 /* {{{ PHP_MINIT_FUNCTION */
 PHP_MINIT_FUNCTION(ir)
 {
@@ -1503,6 +1632,10 @@ PHP_MINIT_FUNCTION(ir)
 	INIT_NS_CLASS_ENTRY(ce, "CoralMedia\\IR", "Similarity", class_CoralMedia_IR_Similarity_methods);
 	ir_ce_similarity = zend_register_internal_class(&ce);
 	ir_ce_similarity->ce_flags |= ZEND_ACC_FINAL;
+
+	INIT_NS_CLASS_ENTRY(ce, "CoralMedia\\IR", "Ranking", class_CoralMedia_IR_Ranking_methods);
+	ir_ce_ranking = zend_register_internal_class(&ce);
+	ir_ce_ranking->ce_flags |= ZEND_ACC_FINAL;
 
 	return SUCCESS;
 }

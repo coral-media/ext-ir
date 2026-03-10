@@ -55,7 +55,8 @@ Current scaffold (`0.1.0`) includes:
 - `CoralMedia\IR\LinearAlgebra::{dot,normL2}()`
 - `CoralMedia\IR\Text::{tokenize,stem}()`
 - `CoralMedia\IR\Vectorizer::{frequency,vocabulary,fit,transform,fitTransform,tfIdf}()`
-- `CoralMedia\IR\Similarity::{pearson,cosine,euclidean,nearest,topK}()`
+- `CoralMedia\IR\Similarity::{pearson,cosine,euclidean}()`
+- `CoralMedia\IR\Ranking::{nearest,topK,bm25}()`
 
 Usage example:
 
@@ -82,8 +83,8 @@ $model = CoralMedia\IR\Vectorizer::fit($tokenized);
 $matrix = CoralMedia\IR\Vectorizer::transform($tokenized, $model);
 
 $query = $matrix[0];
-$best = CoralMedia\IR\Similarity::nearest($query, $matrix, 'cosine');
-$top2 = CoralMedia\IR\Similarity::topK($query, $matrix, 2, 'cosine');
+$best = CoralMedia\IR\Ranking::nearest($query, $matrix, 'cosine');
+$top2 = CoralMedia\IR\Ranking::topK($query, $matrix, 2, 'cosine');
 ```
 
 Next planned steps:
