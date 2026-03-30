@@ -18,10 +18,10 @@ public static pearson(array $x, array $y): float
 * This method is **static**.
 **Parameters:**
 
-| Parameter | Type      | Description                                   |
-|-----------|-----------|-----------------------------------------------|
-| `$x`      | **array** | First vector.                                 |
-| `$y`      | **array** | Second vector. Must have same length as `$x`. |
+| Parameter | Type      | Description                                                                              |
+|-----------|-----------|------------------------------------------------------------------------------------------|
+| `$x`      | **array** | First vector as a dense positional list or sparse associative map.                       |
+| `$y`      | **array** | Second vector. Must match the shape of `$x`; dense lists must also have the same length. |
 
 ***
 
@@ -36,10 +36,10 @@ public static cosine(array $x, array $y): float
 * This method is **static**.
 **Parameters:**
 
-| Parameter | Type      | Description                                   |
-|-----------|-----------|-----------------------------------------------|
-| `$x`      | **array** | First vector.                                 |
-| `$y`      | **array** | Second vector. Must have same length as `$x`. |
+| Parameter | Type      | Description                                                                              |
+|-----------|-----------|------------------------------------------------------------------------------------------|
+| `$x`      | **array** | First vector as a dense positional list or sparse associative map.                       |
+| `$y`      | **array** | Second vector. Must match the shape of `$x`; dense lists must also have the same length. |
 
 ***
 
@@ -56,9 +56,9 @@ Similarity is defined as 1 / (1 + euclidean_distance).
 * This method is **static**.
 **Parameters:**
 
-| Parameter | Type      | Description                                   |
-|-----------|-----------|-----------------------------------------------|
-| `$x`      | **array** | First vector.                                 |
-| `$y`      | **array** | Second vector. Must have same length as `$x`. |
+| Parameter | Type      | Description                                                                              |
+|-----------|-----------|------------------------------------------------------------------------------------------|
+| `$x`      | **array** | First vector as a dense positional list or sparse associative map.                       |
+| `$y`      | **array** | Second vector. Must match the shape of `$x`; dense lists must also have the same length. |
 
 ***

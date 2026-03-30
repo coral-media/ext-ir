@@ -54,7 +54,7 @@ Current scaffold (`0.1.0`) includes:
 - `ir_version()`
 - `CoralMedia\IR\LinearAlgebra::{dot,normL2}()`
 - `CoralMedia\IR\Text::{tokenize,stem}()`
-- `CoralMedia\IR\Vectorizer::{frequency,vocabulary,fit,transform,fitTransform,tfIdf}()`
+- `CoralMedia\IR\Vectorizer::{frequency,vocabulary,fit,transform,fitTransform,tfIdf,densify}()`
 - `CoralMedia\IR\Similarity::{pearson,cosine,euclidean}()`
 - `CoralMedia\IR\Ranking::{nearest,topK,bm25}()`
 

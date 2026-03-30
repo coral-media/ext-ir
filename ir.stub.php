@@ -115,6 +115,15 @@ namespace CoralMedia\IR {
          * @return array<int, array<string, float>> Sparse TF-IDF maps per item.
          */
         public static function tfIdf(array $tokenizedItems): array {}
+
+        /**
+         * Converts sparse vectors into dense vectors using the fitted vocabulary order.
+         *
+         * @param array $matrix Sparse vectors, typically returned by transform(), fitTransform(), or tfIdf().
+         * @param array $model Model returned by fit() or fitTransform()["model"].
+         * @return array<int, array<int, float>> Dense vectors aligned to the model vocabulary indexes.
+         */
+        public static function densify(array $matrix, array $model): array {}
     }
 
     final class Similarity
@@ -122,16 +131,16 @@ namespace CoralMedia\IR {
         /**
          * Computes Pearson correlation between two vectors.
          *
-         * @param array $x First vector.
-         * @param array $y Second vector. Must have same length as `$x`.
+         * @param array $x First vector as a dense positional list or sparse associative map.
+         * @param array $y Second vector. Must match the shape of `$x`; dense lists must also have the same length.
          */
         public static function pearson(array $x, array $y): float {}
 
         /**
          * Computes cosine similarity between two vectors.
          *
-         * @param array $x First vector.
-         * @param array $y Second vector. Must have same length as `$x`.
+         * @param array $x First vector as a dense positional list or sparse associative map.
+         * @param array $y Second vector. Must match the shape of `$x`; dense lists must also have the same length.
          */
         public static function cosine(array $x, array $y): float {}
 
@@ -139,8 +148,8 @@ namespace CoralMedia\IR {
          * Computes Euclidean similarity between two vectors.
          * Similarity is defined as 1 / (1 + euclidean_distance).
          *
-         * @param array $x First vector.
-         * @param array $y Second vector. Must have same length as `$x`.
+         * @param array $x First vector as a dense positional list or sparse associative map.
+         * @param array $y Second vector. Must match the shape of `$x`; dense lists must also have the same length.
          */
         public static function euclidean(array $x, array $y): float {}
 

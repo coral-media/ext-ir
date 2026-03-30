@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: 4543976a150c4bda856980c71a71d534828f640a */
+ * Stub hash: f59b3f22d1d7be384496f669ddf7ac94c8c802cc */
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_ir_version, 0, 0, IS_STRING, 0)
 ZEND_END_ARG_INFO()
@@ -45,6 +45,11 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_CoralMedia_IR_Vectorizer_tfIdf arginfo_class_CoralMedia_IR_Vectorizer_frequency
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_CoralMedia_IR_Vectorizer_densify, 0, 2, IS_ARRAY, 0)
+	ZEND_ARG_TYPE_INFO(0, matrix, IS_ARRAY, 0)
+	ZEND_ARG_TYPE_INFO(0, model, IS_ARRAY, 0)
+ZEND_END_ARG_INFO()
+
 #define arginfo_class_CoralMedia_IR_Similarity_pearson arginfo_class_CoralMedia_IR_LinearAlgebra_dot
 
 #define arginfo_class_CoralMedia_IR_Similarity_cosine arginfo_class_CoralMedia_IR_LinearAlgebra_dot
@@ -83,6 +88,7 @@ ZEND_METHOD(CoralMedia_IR_Vectorizer, fit);
 ZEND_METHOD(CoralMedia_IR_Vectorizer, transform);
 ZEND_METHOD(CoralMedia_IR_Vectorizer, fitTransform);
 ZEND_METHOD(CoralMedia_IR_Vectorizer, tfIdf);
+ZEND_METHOD(CoralMedia_IR_Vectorizer, densify);
 ZEND_METHOD(CoralMedia_IR_Similarity, pearson);
 ZEND_METHOD(CoralMedia_IR_Similarity, cosine);
 ZEND_METHOD(CoralMedia_IR_Similarity, euclidean);
@@ -118,6 +124,7 @@ static const zend_function_entry class_CoralMedia_IR_Vectorizer_methods[] = {
 	ZEND_ME(CoralMedia_IR_Vectorizer, transform, arginfo_class_CoralMedia_IR_Vectorizer_transform, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_ME(CoralMedia_IR_Vectorizer, fitTransform, arginfo_class_CoralMedia_IR_Vectorizer_fitTransform, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_ME(CoralMedia_IR_Vectorizer, tfIdf, arginfo_class_CoralMedia_IR_Vectorizer_tfIdf, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+	ZEND_ME(CoralMedia_IR_Vectorizer, densify, arginfo_class_CoralMedia_IR_Vectorizer_densify, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	ZEND_FE_END
 };
 

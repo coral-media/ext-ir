@@ -123,3 +123,25 @@ Uses smoothed IDF: log((N + 1) / (df + 1)) + 1.
 Sparse TF-IDF maps per item.
 
 ***
+
+### densify
+
+Converts sparse vectors into dense vectors using the fitted vocabulary order.
+
+```php
+public static densify(array $matrix, array $model): array<int,array<int,float>>
+```
+
+* This method is **static**.
+**Parameters:**
+
+| Parameter | Type      | Description                                                                    |
+|-----------|-----------|--------------------------------------------------------------------------------|
+| `$matrix` | **array** | Sparse vectors, typically returned by transform(), fitTransform(), or tfIdf(). |
+| `$model`  | **array** | Model returned by fit() or fitTransform()["model"].                            |
+
+**Return Value:**
+
+Dense vectors aligned to the model vocabulary indexes.
+
+***

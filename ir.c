@@ -506,6 +506,7 @@ ZEND_METHOD(CoralMedia_IR_Similarity, cosine)
 	double *x_values, *y_values;
 	zval *vx, *vy;
 	double dot, nx, ny;
+	bool x_is_list, y_is_list;
 
 	ZEND_PARSE_PARAMETERS_START(2, 2)
 		Z_PARAM_ARRAY(x)
@@ -514,8 +515,19 @@ ZEND_METHOD(CoralMedia_IR_Similarity, cosine)
 
 	hx = Z_ARRVAL_P(x);
 	hy = Z_ARRVAL_P(y);
-	n = zend_hash_num_elements(hx);
+	x_is_list = zend_array_is_list(hx);
+	y_is_list = zend_array_is_list(hy);
 
+	if (!x_is_list && !y_is_list) {
+		RETURN_DOUBLE(ir_sparse_similarity(hx, hy, "cosine"));
+	}
+
+	if (x_is_list != y_is_list) {
+		zend_argument_value_error(2, "must be the same vector shape as argument #1 ($x): both dense lists or both sparse maps");
+		RETURN_THROWS();
+	}
+
+	n = zend_hash_num_elements(hx);
 	if (n != zend_hash_num_elements(hy)) {
 		zend_argument_value_error(2, "must have the same number of elements as argument #1 ($x)");
 		RETURN_THROWS();
@@ -548,6 +560,79 @@ ZEND_METHOD(CoralMedia_IR_Similarity, cosine)
 }
 /* }}} */
 
+/* {{{ CoralMedia\IR\Vectorizer::densify() */
+ZEND_METHOD(CoralMedia_IR_Vectorizer, densify)
+{
+	zval *matrix;
+	zval *model;
+	zval *vocab_zv;
+	zend_array *vocab;
+	zval *row_val;
+	uint32_t vocab_size = 0;
+	zend_string *term;
+	zval *index_val;
+
+	ZEND_PARSE_PARAMETERS_START(2, 2)
+		Z_PARAM_ARRAY(matrix)
+		Z_PARAM_ARRAY(model)
+	ZEND_PARSE_PARAMETERS_END();
+
+	vocab_zv = zend_hash_str_find(Z_ARRVAL_P(model), "vocabulary", sizeof("vocabulary") - 1);
+	if (vocab_zv == NULL || Z_TYPE_P(vocab_zv) != IS_ARRAY) {
+		zend_argument_value_error(2, "must contain a 'vocabulary' array");
+		RETURN_THROWS();
+	}
+	vocab = Z_ARRVAL_P(vocab_zv);
+
+	ZEND_HASH_FOREACH_STR_KEY_VAL(vocab, term, index_val) {
+		uint32_t idx;
+		if (term == NULL) {
+			continue;
+		}
+		idx = (uint32_t) zval_get_long(index_val);
+		if (idx + 1 > vocab_size) {
+			vocab_size = idx + 1;
+		}
+	} ZEND_HASH_FOREACH_END();
+
+	array_init(return_value);
+
+	ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(matrix), row_val) {
+		zval dense_row;
+		uint32_t i;
+
+		if (Z_TYPE_P(row_val) != IS_ARRAY) {
+			zend_argument_value_error(1, "must be an array of sparse vectors");
+			RETURN_THROWS();
+		}
+
+		array_init_size(&dense_row, vocab_size);
+		for (i = 0; i < vocab_size; i++) {
+			add_next_index_double(&dense_row, 0.0);
+		}
+
+		ZEND_HASH_FOREACH_STR_KEY_VAL(Z_ARRVAL_P(row_val), term, index_val) {
+			zval *vocab_index;
+			if (term == NULL) {
+				continue;
+			}
+			vocab_index = zend_hash_find(vocab, term);
+			if (vocab_index != NULL) {
+				zend_long idx = zval_get_long(vocab_index);
+				if (idx >= 0 && (uint32_t) idx < vocab_size) {
+					zval *slot = zend_hash_index_find(Z_ARRVAL(dense_row), (zend_ulong) idx);
+					if (slot != NULL) {
+						ZVAL_DOUBLE(slot, zval_get_double(index_val));
+					}
+				}
+			}
+		} ZEND_HASH_FOREACH_END();
+
+		add_next_index_zval(return_value, &dense_row);
+	} ZEND_HASH_FOREACH_END();
+}
+/* }}} */
+
 /* {{{ CoralMedia\IR\Similarity::pearson() */
 ZEND_METHOD(CoralMedia_IR_Similarity, pearson)
 {
@@ -557,6 +642,7 @@ ZEND_METHOD(CoralMedia_IR_Similarity, pearson)
 	double *x_values, *y_values;
 	zval *vx, *vy;
 	double sum_x = 0.0, sum_y = 0.0, sum_xy = 0.0, sum_x2 = 0.0, sum_y2 = 0.0;
+	bool x_is_list, y_is_list;
 
 	ZEND_PARSE_PARAMETERS_START(2, 2)
 		Z_PARAM_ARRAY(x)
@@ -565,8 +651,19 @@ ZEND_METHOD(CoralMedia_IR_Similarity, pearson)
 
 	hx = Z_ARRVAL_P(x);
 	hy = Z_ARRVAL_P(y);
-	n = zend_hash_num_elements(hx);
+	x_is_list = zend_array_is_list(hx);
+	y_is_list = zend_array_is_list(hy);
 
+	if (!x_is_list && !y_is_list) {
+		RETURN_DOUBLE(ir_sparse_similarity(hx, hy, "pearson"));
+	}
+
+	if (x_is_list != y_is_list) {
+		zend_argument_value_error(2, "must be the same vector shape as argument #1 ($x): both dense lists or both sparse maps");
+		RETURN_THROWS();
+	}
+
+	n = zend_hash_num_elements(hx);
 	if (n != zend_hash_num_elements(hy)) {
 		zend_argument_value_error(2, "must have the same number of elements as argument #1 ($x)");
 		RETURN_THROWS();
@@ -612,6 +709,7 @@ ZEND_METHOD(CoralMedia_IR_Similarity, euclidean)
 	double *x_values, *y_values;
 	zval *vx, *vy;
 	double dot, x_norm, y_norm;
+	bool x_is_list, y_is_list;
 
 	ZEND_PARSE_PARAMETERS_START(2, 2)
 		Z_PARAM_ARRAY(x)
@@ -620,8 +718,19 @@ ZEND_METHOD(CoralMedia_IR_Similarity, euclidean)
 
 	hx = Z_ARRVAL_P(x);
 	hy = Z_ARRVAL_P(y);
-	n = zend_hash_num_elements(hx);
+	x_is_list = zend_array_is_list(hx);
+	y_is_list = zend_array_is_list(hy);
 
+	if (!x_is_list && !y_is_list) {
+		RETURN_DOUBLE(ir_sparse_similarity(hx, hy, "euclidean"));
+	}
+
+	if (x_is_list != y_is_list) {
+		zend_argument_value_error(2, "must be the same vector shape as argument #1 ($x): both dense lists or both sparse maps");
+		RETURN_THROWS();
+	}
+
+	n = zend_hash_num_elements(hx);
 	if (n != zend_hash_num_elements(hy)) {
 		zend_argument_value_error(2, "must have the same number of elements as argument #1 ($x)");
 		RETURN_THROWS();
